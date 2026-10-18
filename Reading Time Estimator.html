@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reading Time Estimator</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 30px 16px;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #243047;
+      background: #f3f6fb;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(27px, 5vw, 36px);
+      letter-spacing: -1px;
+      text-align: center;
+    }
+
+    .subtitle {
+      margin: 0 auto 28px;
+      max-width: 520px;
+      color: #69768a;
+      font-size: 15px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .card {
+      padding: 24px;
+      border: 1px solid #e3e9f2;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 8px 28px rgba(34, 55, 90, 0.06);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 280px;
+      padding: 15px;
+      border: 1px solid #d8e0ec;
+      border-radius: 10px;
+      outline: none;
+      background: #fcfdff;
+      color: #243047;
+      font: inherit;
+      font-size: 15px;
+      line-height: 1.7;
+      resize: vertical;
+    }
+
+    textarea:focus,
+    input:focus {
+      border-color: #3478e5;
+      box-shadow: 0 0 0 3px rgba(52, 120, 229, 0.12);
+    }
+
+    .settings {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .setting {
+      padding: 15px;
+      border: 1px solid #e6ebf3;
+      border-radius: 10px;
+      background: #f9fbfe;
+    }
+
+    .setting label {
+      margin-bottom: 8px;
+    }
+
+    .setting input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d8e0ec;
+      border-radius: 8px;
+      outline: none;
+      background: white;
+      color: #243047;
+      font: inherit;
+    }
+
+    .setting small {
+      display: block;
+      margin-top: 7px;
+      color: #788499;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 22px;
+      border-radius: 12px;
+      background: #edf4ff;
+      text-align: center;
+    }
+
+    .result-label {
+      margin: 0 0 8px;
+      color: #4d6485;
+      font-size: 14px;
+    }
+
+    .time {
+      margin: 0;
+      color: #2463c6;
+      font-size: clamp(32px, 6vw, 44px);
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .word-count {
+      margin: 10px 0 0;
+      color: #526783;
+      font-size: 14px;
+    }
+
+    .progress-track {
+      height: 8px;
+      margin-top: 18px;
+      border-radius: 20px;
+      background: #d8e6fc;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: #3478e5;
+      transition: width 0.25s ease;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    button {
+      padding: 11px 16px;
+      border: 1px solid #d8e0ec;
+      border-radius: 9px;
+      background: white;
+      color: #34445c;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #f0f4fa;
+    }
+
+    .primary {
+      border-color: #3478e5;
+      background: #3478e5;
+      color: white;
+    }
+
+    .primary:hover {
+      background: #245fbe;
+    }
+
+    .note {
+      margin: 18px 0 0;
+      color: #788499;
+      font-size: 12px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 22px 12px;
+      }
+
+      .card {
+        padding: 17px;
+      }
+
+      .settings {
+        grid-template-columns: 1fr;
+      }
+
+      textarea {
+        min-height: 230px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>Reading Time Estimator</h1>
+    <p class="subtitle">
+      Paste your article to estimate how long it will take to read.
+    </p>
+
+    <section class="card">
+      <label for="article">Paste your article</label>
+
+      <textarea
+        id="article"
+        placeholder="Paste or type your article here..."
+        spellcheck="true"
+      ></textarea>
+
+      <div class="settings">
+        <div class="setting">
+          <label for="speed">Reading speed (words per minute)</label>
+          <input
+            id="speed"
+            type="number"
+            min="1"
+            max="2000"
+            value="200"
+          >
+          <small>A typical adult reading speed is around 200–250 WPM.</small>
+        </div>
+
+        <div class="setting">
+          <label for="extraTime">Extra time (minutes)</label>
+          <input
+            id="extraTime"
+            type="number"
+            min="0"
+            max="1440"
+            value="0"
+          >
+          <small>Add time for pauses, reflection, or note-taking.</small>
+        </div>
+      </div>
+
+      <div class="result" aria-live="polite">
+        <p class="result-label">Estimated reading time</p>
+        <p class="time" id="readingTime">0 min</p>
+        <p class="word-count" id="wordCount">0 words</p>
+
+        <div
+          class="progress-track"
+          role="progressbar"
+          aria-label="Article word count progress"
+          aria-valuemin="0"
+          aria-valuemax="5000"
+          aria-valuenow="0"
+          id="progressTrack"
+        >
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button class="primary" id="sampleButton" type="button">
+          Try sample
+        </button>
+        <button id="copyButton" type="button">
+          Copy results
+        </button>
+        <button id="clearButton" type="button">
+          Clear text
+        </button>
+      </div>
+
+      <p class="note" id="status" aria-live="polite">
+        Results update automatically as you type.
+      </p>
+    </section>
+
+    <p class="note">
+      Reading time is an estimate based on your selected reading speed.
+      Your text stays in your browser.
+    </p>
+  </main>
+
+  <script>
+    const article = document.getElementById("article");
+    const speedInput = document.getElementById("speed");
+    const extraTimeInput = document.getElementById("extraTime");
+    const readingTime = document.getElementById("readingTime");
+    const wordCount = document.getElementById("wordCount");
+    const progressFill = document.getElementById("progressFill");
+    const progressTrack = document.getElementById("progressTrack");
+    const status = document.getElementById("status");
+
+    const sampleArticle =
+      "Reading is one of the most effective ways to explore new ideas. " +
+      "It helps us learn about science, history, technology, and people. " +
+      "Regular reading can expand vocabulary, improve comprehension, and " +
+      "encourage critical thinking. The time required to read an article " +
+      "depends on its length, complexity, and the reader's pace.";
+
+    function countWords(text) {
+      const trimmed = text.trim();
+
+      if (!trimmed) {
+        return 0;
+      }
+
+      // Count sequences of letters or numbers, supporting Unicode text.
+      const words = trimmed.match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu);
+      return words ? words.length : 0;
+    }
+
+    function formatDuration(totalMinutes) {
+      if (totalMinutes <= 0) {
+        return "0 min";
+      }
+
+      const totalSeconds = Math.ceil(totalMinutes * 60);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      if (hours > 0) {
+        return seconds > 0
+          ? `${hours} hr ${minutes} min ${seconds} sec`
+          : minutes > 0
+            ? `${hours} hr ${minutes} min`
+            : `${hours} hr`;
+      }
+
+      if (minutes > 0) {
+        return seconds > 0
+          ? `${minutes} min ${seconds} sec`
+          : `${minutes} min`;
+      }
+
+      return `${seconds} sec`;
+    }
+
+    function updateEstimate() {
+      const text = article.value;
+      const words = countWords(text);
+
+      let speed = Number(speedInput.value);
+      let extra = Number(extraTimeInput.value);
+
+      const validSpeed =
+        speedInput.value.trim() !== "" &&
+        Number.isFinite(speed) &&
+        speed >= 1 &&
+        speed <= 2000;
+
+      const validExtra =
+        extraTimeInput.value.trim() !== "" &&
+        Number.isFinite(extra) &&
+        extra >= 0 &&
+        extra <= 1440;
+
+      if (!validSpeed || !validExtra) {
+        readingTime.textContent = "—";
+        wordCount.textContent = `${words.toLocaleString()} words`;
+        progressFill.style.width = "0%";
+        progressTrack.setAttribute("aria-valuenow", "0");
+        status.textContent =
+          "Enter a valid reading speed (1–2000) and extra time (0–1440).";
+        status.style.color = "#c0394b";
+        return;
+      }
+
+      const minutes = words / speed + extra;
+
+      readingTime.textContent = formatDuration(minutes);
+      wordCount.textContent =
+        `${words.toLocaleString()} ${words === 1 ? "word" : "words"}`;
+
+      // Visual indicator scaled to 5,000 words.
+      const progress = Math.min((words / 5000) * 100, 100);
+      progressFill.style.width = `${progress}%`;
+      progressTrack.setAttribute("aria-valuenow", String(Math.min(words, 5000)));
+
+      status.textContent = words
+        ? `At ${speed.toLocaleString()} words per minute${extra ? `, including ${extra} extra minute(s)` : ""}.`
+        : "Paste or type text to calculate reading time.";
+
+      status.style.color = "#788499";
+    }
+
+    article.addEventListener("input", updateEstimate);
+    speedInput.addEventListener("input", updateEstimate);
+    extraTimeInput.addEventListener("input", updateEstimate);
+
+    document.getElementById("sampleButton").addEventListener("click", () => {
+      article.value = sampleArticle;
+      updateEstimate();
+      status.textContent = "Sample article loaded.";
+      status.style.color = "#13865c";
+    });
+
+    document.getElementById("clearButton").addEventListener("click", () => {
+      article.value = "";
+      updateEstimate();
+      status.textContent = "Text cleared.";
+      article.focus();
+    });
+
+    document.getElementById("copyButton").addEventListener("click", async () => {
+      const text = article.value;
+      const words = countWords(text);
+      const speed = Number(speedInput.value);
+      const extra = Number(extraTimeInput.value);
+
+      if (
+        !Number.isFinite(speed) || speed < 1 || speed > 2000 ||
+        !Number.isFinite(extra) || extra < 0 || extra > 1440 ||
+        speedInput.value.trim() === "" ||
+        extraTimeInput.value.trim() === ""
+      ) {
+        status.textContent = "Please correct the reading settings first.";
+        status.style.color = "#c0394b";
+        return;
+      }
+
+      if (!text.trim()) {
+        status.textContent = "Enter an article before copying results.";
+        status.style.color = "#c0394b";
+        return;
+      }
+
+      const duration = formatDuration(words / speed + extra);
+      const report =
+        `Reading Time Estimator\n` +
+        `Word count: ${words}\n` +
+        `Reading speed: ${speed} words per minute\n` +
+        `Extra time: ${extra} minutes\n` +
+        `Estimated reading time: ${duration}`;
+
+      try {
+        await navigator.clipboard.writeText(report);
+        status.textContent = "Results copied to clipboard!";
+        status.style.color = "#13865c";
+      } catch (error) {
+        status.textContent =
+          "Clipboard access is unavailable in this browser. You can copy the results manually.";
+        status.style.color = "#c0394b";
+      }
+    });
+
+    updateEstimate();
+  </script>
+</body>
+</html>
